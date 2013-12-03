@@ -33,7 +33,7 @@ import com.parse.ParseFacebookUtils;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
 
-public class LoginActivity extends Activity {
+public class MainActivity extends Activity {
 
 	private Button loginButton;
 	private Dialog progressDialog;
@@ -43,9 +43,9 @@ public class LoginActivity extends Activity {
 		// TODO Auto-generated method stub
 		super.onCreate(savedInstanceState);
 
-		setTitle("Cropop");
-		
-//		startServices();
+		setTitle("CropopApplication");
+		 
+		startServices();
 
 		//		Intent cropopIntent = new Intent(this, CropopService.class);
 		//		startService(cropopIntent);
@@ -53,6 +53,9 @@ public class LoginActivity extends Activity {
 		//		startService(notifIntent);
 //		DictionaryOpenHelper db = new DictionaryOpenHelper(this);
 		//		db.dropTable();
+		
+//		Intent intent = new Intent(this, SendMessageMap.class);
+//		startActivity(intent);
 		startFirstActivity(savedInstanceState);
 
 	}
@@ -101,19 +104,19 @@ public class LoginActivity extends Activity {
 	}
 
 	private void onLoginButtonClicked() {
-		LoginActivity.this.progressDialog = ProgressDialog.show(
-				LoginActivity.this, "", "Logging in...", true);
+		MainActivity.this.progressDialog = ProgressDialog.show(
+				MainActivity.this, "", "Logging in...", true);
 		List<String> permissions = Arrays.asList("basic_info", "user_about_me",
 				"user_relationships", "user_birthday", "user_location");
 		ParseFacebookUtils.logIn(permissions, this, new LogInCallback() {
 			@Override
 			public void done(ParseUser user, ParseException err) {
-				LoginActivity.this.progressDialog.dismiss();
+				MainActivity.this.progressDialog.dismiss();
 				if (user == null) {
-					Log.d(IntegratingFacebookTutorialApplication.TAG,
+					Log.d(CropopApplication.TAG,
 							"Uh oh. The user cancelled the Facebook login.");
 				} else if (user.isNew()) {
-					Log.d(IntegratingFacebookTutorialApplication.TAG,
+					Log.d(CropopApplication.TAG,
 							"User signed up and logged in through Facebook!");
 					// Fetch Facebook user info if the session is active
 					Session session = ParseFacebookUtils.getSession();
@@ -123,7 +126,7 @@ public class LoginActivity extends Activity {
 					getFriends();
 					//					showUserDetailsActivity();
 				} else {
-					Log.d(IntegratingFacebookTutorialApplication.TAG,
+					Log.d(CropopApplication.TAG,
 							"User logged in through Facebook!");
 					getFriends();
 				}
@@ -171,18 +174,18 @@ public class LoginActivity extends Activity {
 						// Show the user info
 						//                                                 updateViewsWithProfileInfo();
 					} catch (JSONException e) {
-						Log.d(IntegratingFacebookTutorialApplication.TAG,
+						Log.d(CropopApplication.TAG,
 								"Error parsing returned user data.");
 					}
 
 				} else if (response.getError() != null) {
 					if ((response.getError().getCategory() == FacebookRequestError.Category.AUTHENTICATION_RETRY)
 							|| (response.getError().getCategory() == FacebookRequestError.Category.AUTHENTICATION_REOPEN_SESSION)) {
-						Log.d(IntegratingFacebookTutorialApplication.TAG,
+						Log.d(CropopApplication.TAG,
 								"The facebook session was invalidated.");
 						//						onLogoutButtonClicked();
 					} else {
-						Log.d(IntegratingFacebookTutorialApplication.TAG,
+						Log.d(CropopApplication.TAG,
 								"Some other error: "
 										+ response.getError()
 										.getErrorMessage());
@@ -196,8 +199,8 @@ public class LoginActivity extends Activity {
 	protected void getFriends() {
 
 		//Call Facebook API to get friends...
-		LoginActivity.this.progressDialog = ProgressDialog.show(
-				LoginActivity.this, "", "Loading friends...", true);
+		MainActivity.this.progressDialog = ProgressDialog.show(
+				MainActivity.this, "", "Loading friends...", true);
 
 		Request request = Request.newMyFriendsRequest(ParseFacebookUtils.getSession(),
 				new Request.GraphUserListCallback() {
@@ -212,13 +215,13 @@ public class LoginActivity extends Activity {
 				} else if (response.getError() != null) {
 					if ((response.getError().getCategory() == FacebookRequestError.Category.AUTHENTICATION_RETRY)
 							|| (response.getError().getCategory() == FacebookRequestError.Category.AUTHENTICATION_REOPEN_SESSION)) {
-						//						Log.d(IntegratingFacebookTutorialApplication.TAG,
+						//						Log.d(CropopApplication.TAG,
 						//								"The facebook session was invalidated.");
 
 						//TODO Do something !
 						//						onLogoutButtonClicked();
 					} else {
-						//						Log.d(IntegratingFacebookTutorialApplication.TAG,
+						//						Log.d(CropopApplication.TAG,
 						//								"Some other error: "
 						//										+ response.getError()
 						//										.getErrorMessage());
@@ -256,24 +259,24 @@ public class LoginActivity extends Activity {
 	}
 	
 	private void startCropopService() {
-		Thread t = new Thread(){
-			public void run(){
+//		Thread t = new Thread(){
+//			public void run(){
 				getApplicationContext().startService(
 						new Intent(getApplicationContext(), CropopService.class)
 						);
-			}
-		};
-		t.start();
+//			}
+//		};
+//		t.start();
 	}
 
 	private void startNotificationService() {
-		Thread t = new Thread(){
-			public void run(){
+//		Thread t = new Thread(){
+//			public void run(){
 				getApplicationContext().startService(
 						new Intent(getApplicationContext(), NotificationService.class)
 						);
-			}
-		};
-		t.start();
+//			}
+//		};
+//		t.start();
 	}
 }

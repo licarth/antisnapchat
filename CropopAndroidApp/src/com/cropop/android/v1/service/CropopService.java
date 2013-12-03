@@ -1,7 +1,9 @@
 package com.cropop.android.v1.service;
 
+import java.util.Date;
 import java.util.List;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
 import android.app.Service;
@@ -17,24 +19,25 @@ import com.parse.ParseUser;
 
 public class CropopService extends Service {
 
-	public static int DETECTION_PERIOD = 2*1000;
+	public static long DETECTION_PERIOD = TimeUnit.SECONDS.toMillis(30);
 
-	final ScheduledThreadPoolExecutor pool = new ScheduledThreadPoolExecutor(1);
+	final Timer timer = new Timer();
 
 	@Override
 	public void onCreate() {
-		// TODO Auto-generated method stub
 		super.onCreate();
-		android.os.Debug.waitForDebugger();
-		pool.scheduleAtFixedRate(new Runnable() {
+		timer.scheduleAtFixedRate(new TimerTask() {
+			
 			@Override
 			public void run() {
 				Log.i("CropopService", "Service check Run !");
-//				checkForNewMessagesOnline();
+				checkForNewMessagesOnline();
+				
+//				timer.purge();
+//				timer.cancel();
 			}
-		}, 0, DETECTION_PERIOD, TimeUnit.SECONDS);
-		Log.i("CropopService", "Service started : active: "+pool.getActiveCount()+"scheduled"+pool.getQueue().size());
-//	pool.execute(command);
+		}, new Date(System.currentTimeMillis()+2000), DETECTION_PERIOD);
+		Log.i("CropopService", "Service started : active: ");
 	}
 
 	@Override
@@ -50,6 +53,8 @@ public class CropopService extends Service {
 		ParseQuery<ParseObject> query = ParseQuery.getQuery("Message");
 		query.whereEqualTo("dest_user", currentUser);
 		query.whereEqualTo("delivered", false);
+		query.include("exp_user");	//Forces to fetch entire exp_user object
+		query.include("dest_user");	//Forces to fetch entire exp_user object
 
 		try {
 			List<ParseObject> messageList = query.find();

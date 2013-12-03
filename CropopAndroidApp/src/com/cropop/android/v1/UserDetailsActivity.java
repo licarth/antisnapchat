@@ -113,18 +113,18 @@ public class UserDetailsActivity extends Activity {
                                                                 // Show the user info
                                                                 updateViewsWithProfileInfo();
                                                         } catch (JSONException e) {
-                                                                Log.d(IntegratingFacebookTutorialApplication.TAG,
+                                                                Log.d(CropopApplication.TAG,
                                                                                 "Error parsing returned user data.");
                                                         }
 
                                                 } else if (response.getError() != null) {
                                                         if ((response.getError().getCategory() == FacebookRequestError.Category.AUTHENTICATION_RETRY)
                                                                         || (response.getError().getCategory() == FacebookRequestError.Category.AUTHENTICATION_REOPEN_SESSION)) {
-                                                                Log.d(IntegratingFacebookTutorialApplication.TAG,
+                                                                Log.d(CropopApplication.TAG,
                                                                                 "The facebook session was invalidated.");
                                                                 onLogoutButtonClicked();
                                                         } else {
-                                                                Log.d(IntegratingFacebookTutorialApplication.TAG,
+                                                                Log.d(CropopApplication.TAG,
                                                                                 "Some other error: "
                                                                                                 + response.getError()
                                                                                                                 .getErrorMessage());
@@ -177,7 +177,7 @@ public class UserDetailsActivity extends Activity {
                                         userRelationshipView.setText("");
                                 }
                         } catch (JSONException e) {
-                                Log.d(IntegratingFacebookTutorialApplication.TAG,
+                                Log.d(CropopApplication.TAG,
                                                 "Error parsing saved user data.");
                         }
 
@@ -193,7 +193,7 @@ public class UserDetailsActivity extends Activity {
         }
 
         private void startLoginActivity() {
-                Intent intent = new Intent(this, LoginActivity.class);
+                Intent intent = new Intent(this, MainActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);

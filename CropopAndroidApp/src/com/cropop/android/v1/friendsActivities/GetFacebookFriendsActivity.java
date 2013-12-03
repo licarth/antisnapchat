@@ -33,13 +33,13 @@ public class GetFacebookFriendsActivity extends Activity {
 				} else if (response.getError() != null) {
 					if ((response.getError().getCategory() == FacebookRequestError.Category.AUTHENTICATION_RETRY)
 							|| (response.getError().getCategory() == FacebookRequestError.Category.AUTHENTICATION_REOPEN_SESSION)) {
-//						Log.d(IntegratingFacebookTutorialApplication.TAG,
+//						Log.d(CropopApplication.TAG,
 //								"The facebook session was invalidated.");
 						
 						//TODO Do something !
 						//						onLogoutButtonClicked();
 					} else {
-//						Log.d(IntegratingFacebookTutorialApplication.TAG,
+//						Log.d(CropopApplication.TAG,
 //								"Some other error: "
 //										+ response.getError()
 //										.getErrorMessage());

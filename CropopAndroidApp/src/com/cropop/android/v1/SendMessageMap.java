@@ -9,10 +9,7 @@ import android.location.Criteria;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.animation.BounceInterpolator;
 
@@ -23,7 +20,6 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.OnMapClickListener;
 import com.google.android.gms.maps.GoogleMap.OnMarkerDragListener;
-import com.google.android.gms.maps.GoogleMapOptions;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
@@ -31,7 +27,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-public class SendMessageMap extends FragmentActivity {
+public class SendMessageMap extends ActionBarActivity {
 	private GoogleMap mMap;
 	Marker marker;
 	static final LatLng CENTRALE_PARIS = new LatLng(48.7638176721, 2.2886595502);
@@ -39,99 +35,122 @@ public class SendMessageMap extends FragmentActivity {
 	private LocationManager locMgr = null;
 	private Criteria crit=new Criteria();
 	private Circle circle;
-	private int circleColor = ColorUtils.setTransparency(Color.GREEN, 45);
-	private int circleStrokeColor = ColorUtils.setTransparency(Color.GREEN, 85);
-
+	private int circleColor = ColorUtils.setTransparency(Color.parseColor("#ABFACF"), 45);
+	private int circleStrokeColor = ColorUtils.setTransparency(Color.parseColor("#39942A"), 100);
+	private float circleStrokeWidth = 2.0F;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		setTitle("Locate the target...");
 		super.onCreate(savedInstanceState);
+		setContentView(R.layout.send_message_map);
+		setTitle("Drop your pop...");
+	    getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+//	    getSupportActionBar().setHasOptionsMenu(true);
+		
+//	    startSupportActionMode(new ActionMode.Callback() {
+//	        @Override
+//	        public boolean onCreateActionMode(ActionMode actionMode, Menu menu) {
+//	            // Inflate our menu from a resource file
+////	            actionMode.getMenuInflater().inflate(R.menu.map_activity_actions, menu);
+//	        	actionMode.setTitle("Locate the target...");
+////	            menu.findItem(id)
+//	            // Return true so that the action mode is shown
+//	            return true;
+//	        }
+//
+//	        @Override
+//	        public boolean onPrepareActionMode(ActionMode actionMode, Menu menu) {
+//	            // As we do not need to modify the menu before displayed, we return false.
+//	            return false;
+//	        }
+//
+//	        @Override
+//	        public boolean onActionItemClicked(ActionMode actionMode, MenuItem menuItem) {
+//	            // Similar to menu handling in Activity.onOptionsItemSelected()
+//	            switch (menuItem.getItemId()) {
+//	                case R.id.action_done:
+//	                    // Some remove functionality
+//	                    finish();
+//	                	return true;
+//	                    
+//	            }
+//
+//	            return false;
+//	        }
+//
+//	        @Override
+//	        public void onDestroyActionMode(ActionMode actionMode) {
+//	            // Allows you to be notified when the action mode is dismissed
+//	        }
+//	        
+//	    });
+		mMap = getMap();
+		
+		//Elements
+		CircleOptions circleOptions = new CircleOptions()
+		.center(CENTRALE_PARIS)
+		.fillColor(circleColor)
+		.strokeWidth(circleStrokeWidth)
+		.strokeColor(circleStrokeColor)
+		.radius(NotificationService.DETECTION_DIST) // In meters
+		.visible(false);
 
-		final Handler handler = new Handler();
-		handler.postDelayed(new Runnable() {
+		circle = mMap.addCircle(circleOptions);
+		
+		locMgr = (LocationManager) getSystemService(LOCATION_SERVICE);
+		crit.setAccuracy(Criteria.ACCURACY_FINE);
+		mMap.setMyLocationEnabled(true);
+
+		mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(MyLocationManager.getLocation(this), 14.0f));
+		//		intent.putExtra("point", marker.getPosition());
+		//		setResult(RESULT_OK, intent);
+
+		mMap.setOnMapClickListener(new OnMapClickListener() {
 
 			@Override
-			public void run() {
-				GoogleMap googleMap = getMap();
-				if(googleMap != null) {
-
-					setContentView(R.layout.send_message_map);
-
-					mMap = getMap();		
-
-					//Elements
-					CircleOptions circleOptions = new CircleOptions()
-					.fillColor(circleColor)
-					.strokeWidth(1.0F)
-					.strokeColor(circleStrokeColor)
-					.radius(NotificationService.DETECTION_DIST) // In meters
-					.visible(false);
-
-					circle = mMap.addCircle(circleOptions);
-
-					locMgr = (LocationManager) getSystemService(LOCATION_SERVICE);
-					crit.setAccuracy(Criteria.ACCURACY_FINE);
-					mMap.setMyLocationEnabled(true);
-
-					mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(MyLocationManager.getLocation(SendMessageMap.this), 14.0f));
-					//		intent.putExtra("point", marker.getPosition());
-					//		setResult(RESULT_OK, intent);
-
-					mMap.setOnMapClickListener(new OnMapClickListener() {
-
-						@Override
-						public void onMapClick(LatLng point) {
-							if (marker == null){
-								marker = mMap.addMarker(new MarkerOptions()
-								.position(point)
-								.draggable(true));
-								circle.setCenter(point);
-								circle.setVisible(true);
-							}
-							onMarkerMoved();
-						}
-
-					});
-					mMap.setOnMarkerDragListener(new OnMarkerDragListener() {
-
-						@Override
-						public void onMarkerDrag(Marker marker) {
-							circle.setCenter(marker.getPosition());
-							circle.setFillColor(circleColor);
-						}
-
-						@Override
-						public void onMarkerDragEnd(Marker marker) {
-							onMarkerMoved();
-						}
-
-						@Override
-						public void onMarkerDragStart(Marker marker) {
-							// TODO Auto-generated method stub
-						}
-
-					});
-
+			public void onMapClick(LatLng point) {
+				if (marker == null){
+					marker = mMap.addMarker(new MarkerOptions()
+					.position(point)
+					.draggable(true));
+					circle.setCenter(point);
+					circle.setVisible(true);
 				}
-
 				else {
-					handler.postDelayed(this, 500);
+					marker.setPosition(point);
+					circle.setCenter(point);
 				}
+				onMarkerMoved();
 			}
-		}, 500);
 
+		});
+		mMap.setOnMarkerDragListener(new OnMarkerDragListener() {
+
+			@Override
+			public void onMarkerDrag(Marker marker) {
+				circle.setCenter(marker.getPosition());
+				circle.setFillColor(circleColor);
+			}
+
+			@Override
+			public void onMarkerDragEnd(Marker marker) {
+				onMarkerMoved();
+			}
+
+			@Override
+			public void onMarkerDragStart(Marker marker) {
+				// TODO Auto-generated method stub
+			}
+
+		});
 	}
 
 	private GoogleMap getMap() {
-		FragmentManager sfm = getSupportFragmentManager();
-		SupportMapFragment mf = (SupportMapFragment) sfm.findFragmentById(R.id.map);
-		return mf.getMap();
+		return ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map)).getMap();
 	}
 
 	private void onMarkerMoved(){
 		circle.setCenter(marker.getPosition());
-		//		Log.i("Parse", "Coordinates : "+marker.getPosition());
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR1) {
 			animateMarkerOnUpdate();
 		}		
@@ -155,7 +174,6 @@ public class SendMessageMap extends FragmentActivity {
 				float animatedFraction = valueAnimator.getAnimatedFraction();
 				// Log.e("", "" + animatedFraction);
 				circle.setRadius(animatedFraction * 100);
-
 			}
 		});
 		vAnimator.start();
