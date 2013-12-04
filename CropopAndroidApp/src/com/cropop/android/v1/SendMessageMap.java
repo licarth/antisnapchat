@@ -14,7 +14,7 @@ import android.view.Menu;
 import android.view.animation.BounceInterpolator;
 
 import com.cropop.android.v1.manager.MyLocationManager;
-import com.cropop.android.v1.service.NotificationService;
+import com.cropop.android.v1.service.LocationWatchService;
 import com.cropop.android.v1.util.ColorUtils;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -92,7 +92,7 @@ public class SendMessageMap extends ActionBarActivity {
 		.fillColor(circleColor)
 		.strokeWidth(circleStrokeWidth)
 		.strokeColor(circleStrokeColor)
-		.radius(NotificationService.DETECTION_DIST) // In meters
+		.radius(LocationWatchService.DETECTION_DIST) // In meters
 		.visible(false);
 
 		circle = mMap.addCircle(circleOptions);

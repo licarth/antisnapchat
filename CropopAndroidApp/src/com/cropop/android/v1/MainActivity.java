@@ -18,9 +18,10 @@ import android.widget.Button;
 
 import com.cropop.android.v1.R;
 import com.cropop.android.v1.manager.FriendsManager;
-import com.cropop.android.v1.service.CropopService;
+import com.cropop.android.v1.model.Message;
+import com.cropop.android.v1.service.MessageSyncService;
 import com.cropop.android.v1.service.DictionaryOpenHelper;
-import com.cropop.android.v1.service.NotificationService;
+import com.cropop.android.v1.service.LocationWatchService;
 import com.facebook.FacebookRequestError;
 import com.facebook.Request;
 import com.facebook.Response;
@@ -28,10 +29,14 @@ import com.facebook.Session;
 import com.facebook.model.GraphUser;
 import com.parse.FindCallback;
 import com.parse.LogInCallback;
+import com.parse.ParseAnalytics;
 import com.parse.ParseException;
 import com.parse.ParseFacebookUtils;
+import com.parse.ParseInstallation;
+import com.parse.ParsePush;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
+import com.parse.PushService;
 
 public class MainActivity extends Activity {
 
@@ -42,30 +47,58 @@ public class MainActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		// TODO Auto-generated method stub
 		super.onCreate(savedInstanceState);
-
 		setTitle("CropopApplication");
-		 
-		startServices();
+		//		Parse App opens statistics
+		ParseAnalytics.trackAppOpened(getIntent());
 
-		//		Intent cropopIntent = new Intent(this, CropopService.class);
-		//		startService(cropopIntent);
-		//		Intent notifIntent = new Intent(this, NotificationService.class);
-		//		startService(notifIntent);
-//		DictionaryOpenHelper db = new DictionaryOpenHelper(this);
-		//		db.dropTable();
-		
-//		Intent intent = new Intent(this, SendMessageMap.class);
-//		startActivity(intent);
 		startFirstActivity(savedInstanceState);
-
 	}
+
+	private void startApp() {
+		PushService.setDefaultPushCallback(this, MainActivity.class);
+		ParseInstallation installation = ParseInstallation.getCurrentInstallation();
+		installation.put("user", ParseUser.getCurrentUser());
+		try {
+			installation.save();
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		startServices();
+		//				sendNotifTests();
+		getFriends();
+	}
+
+	//	private void sendNotifTests() {
+	//				JSONObject data;
+	//				try {
+	//					data = new JSONObject("{"
+	//							+ "\"action\": \"com.cropop.action.NEW_MESSAGE\","
+	//							+ "\"name\": \"Vaughn\","
+	//							+ "\"newsItem\": \"Man bites dog\"}");
+	//
+	////					ParseQuery<ParseUser> userQuery = ParseUser.getQuery();
+	////					userQuery.whereEqualTo("objectId", ParseUser.getCurrentUser().getObjectId());
+	////
+	////					ParseQuery pushQuery = ParseInstallation.getQuery();
+	////					pushQuery.whereMatchesQuery("user", userQuery);
+	//					ParseQuery pushQuery = ParseInstallation.getQuery();
+	//					pushQuery.whereEqualTo("user", ParseUser.getCurrentUser());
+	//
+	//					ParsePush push = new ParsePush();
+	//					push.setQuery(pushQuery);
+	//					push.setData(data);
+	//					push.sendInBackground();
+	//					
+	//				} catch (JSONException e) {
+	//					// TODO Auto-generated catch block
+	//					e.printStackTrace();
+	//				}		
+	//	}
 
 	private void startServices() {
-		startNotificationService();
-		startCropopService();
+		startLocationWatchService();
 	}
-
-	
 
 	//	@Override
 	protected void startFirstActivity(Bundle savedInstanceState) {
@@ -86,7 +119,7 @@ public class MainActivity extends Activity {
 		ParseUser currentUser = ParseUser.getCurrentUser();
 		if ((currentUser != null) && ParseFacebookUtils.isLinked(currentUser)) {
 			// Go to the user info activity
-			getFriends();
+			startApp();
 		}
 	}
 
@@ -123,12 +156,12 @@ public class MainActivity extends Activity {
 					if (session != null && session.isOpened()) {
 						makeMeRequest();
 					}
-					getFriends();
+					startApp();
 					//					showUserDetailsActivity();
 				} else {
 					Log.d(CropopApplication.TAG,
 							"User logged in through Facebook!");
-					getFriends();
+					startApp();
 				}
 			}
 		});
@@ -210,8 +243,8 @@ public class MainActivity extends Activity {
 					FriendsManager.setMyFriends(friends);
 					Log.i("Parse", friends.size()+" friends found.");
 					compareWithParseUsers();
-					
-					
+
+
 				} else if (response.getError() != null) {
 					if ((response.getError().getCategory() == FacebookRequestError.Category.AUTHENTICATION_RETRY)
 							|| (response.getError().getCategory() == FacebookRequestError.Category.AUTHENTICATION_REOPEN_SESSION)) {
@@ -249,34 +282,17 @@ public class MainActivity extends Activity {
 					Log.d("score", "Retrieved " + parseFriends.size() + " scores");
 					displayFriends();
 					progressDialog.dismiss();
-					
-					
+
+
 				} else {
 					Log.d("score", "Error: " + e.getMessage());
 				}
 			}
 		});
 	}
-	
-	private void startCropopService() {
-//		Thread t = new Thread(){
-//			public void run(){
-				getApplicationContext().startService(
-						new Intent(getApplicationContext(), CropopService.class)
-						);
-//			}
-//		};
-//		t.start();
-	}
 
-	private void startNotificationService() {
-//		Thread t = new Thread(){
-//			public void run(){
-				getApplicationContext().startService(
-						new Intent(getApplicationContext(), NotificationService.class)
-						);
-//			}
-//		};
-//		t.start();
+	private void startLocationWatchService() {
+		Intent locationWatchService = new Intent(getApplicationContext(), LocationWatchService.class);
+		getApplicationContext().startService(locationWatchService);
 	}
 }

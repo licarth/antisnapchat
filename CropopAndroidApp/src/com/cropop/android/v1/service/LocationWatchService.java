@@ -10,8 +10,10 @@ import java.util.concurrent.TimeUnit;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
@@ -23,35 +25,55 @@ import com.cropop.android.v1.R;
 import com.cropop.android.v1.ShowMessageActivity;
 import com.cropop.android.v1.manager.MyLocationManager;
 import com.cropop.android.v1.model.Message;
+import com.google.android.gms.internal.al;
 import com.google.android.gms.maps.model.LatLng;
 
 
-public class NotificationService extends Service {
+
+public class LocationWatchService extends Service {
 
 	double distance;
 	public static int DETECTION_DIST = 100; //En metres
-	public static long DETECTION_PERIOD = TimeUnit.SECONDS.toMillis(5);
-
-	public Timer timer = new Timer();
+	public static long DETECTION_PERIOD = TimeUnit.SECONDS.toMillis(60);
+	public BroadcastReceiver forceLocalizeReceiver = new BroadcastReceiver() {
+		
+		@Override
+		public void onReceive(Context context, Intent intent) {
+				forceDetection();
+		}
+	};
+	
+	private Timer timer = new Timer();
 
 	@Override
 	public void onCreate() {
 		super.onCreate();
-		Log.i("CropopService", "Service started.");
+		registerReceiver(forceLocalizeReceiver, new IntentFilter("com.cropop.action.FORCE_LOCALIZE"));
+		Log.i("MessageSyncService", "Service started.");
 
 		timer.scheduleAtFixedRate(new TimerTask() {
 			synchronized public void run() {
-				Log.i("NotificationService", "Notification Service Run !");
+				Log.i("LocationWatchService", "Notification Service Run !");
 				alertUser();
 			}
 		}, new Date(System.currentTimeMillis() + 3000), DETECTION_PERIOD);
 	}
 	
+	public void forceDetection(){
+		timer.schedule(new TimerTask() {
+			
+			@Override
+			public void run() {
+				alertUser();
+			}
+		}, 0);
+	}
+	
+	
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		return START_STICKY;
 	}
-
 
 	protected void alertUser() {
 
@@ -61,10 +83,10 @@ public class NotificationService extends Service {
 		int messagesToBeNotified = 0;
 
 		try {
-			LatLng pos = MyLocationManager.getLocation(NotificationService.this);
+			LatLng pos = MyLocationManager.getLocation(LocationWatchService.this);
 
-			DictionaryOpenHelper db = new DictionaryOpenHelper(NotificationService.this);
-			c = db.getUnDeliveredMessages(); 
+			DictionaryOpenHelper db = new DictionaryOpenHelper(LocationWatchService.this);
+			c = db.getUnNotifiedMessages(); 
 			while (c.moveToNext()) {
 				double lat = c.getDouble(c.getColumnIndex(TARGET_LAT));
 				double lng = c.getDouble(c.getColumnIndex(TARGET_LNG));
@@ -74,12 +96,12 @@ public class NotificationService extends Service {
 				if (distance * 1000 <= DETECTION_DIST){
 					messagesToBeNotified++;
 					//Notify
-					Log.i("MessageNotification", "You've got one NEW MESSAGE !");
-					Message message = new Message();
-					message = db.createMessageFromCursor(c);
+					Message m = new Message();
+					m = db.createMessageFromCursor(c);
 
 					//Notify user !
-					notifyUser(message);
+					notifyUser(m);
+					db.markAsNotified(m);
 				}
 				else {
 					//Store for further notification.
@@ -137,7 +159,7 @@ public class NotificationService extends Service {
 
 	@Override
 	public IBinder onBind(Intent intent) {
-		Log.i("NotificationService", "Service bound.");
+		Log.i("LocationWatchService", "Service bound.");
 		return null;
 	}
 

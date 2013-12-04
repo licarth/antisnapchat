@@ -1,9 +1,5 @@
 package com.cropop.android.v1.service;
 
-import static com.cropop.android.v1.service.DictionaryOpenHelper.*;
-
-import java.sql.SQLClientInfoException;
-
 import org.json.JSONException;
 
 import android.content.ContentValues;
@@ -28,6 +24,7 @@ public class DictionaryOpenHelper extends SQLiteOpenHelper {
 	public static final String TARGET_LAT = "target_lat";
 	public static final String TARGET_LNG = "target_lng";
 	public static final String CONTENT = "content";
+	public static final String USER_NOTIFIED = "user_notified";
 	public static final String DELIVERED = "delivered";
 	private static final String DICTIONARY_TABLE_CREATE =
 			"CREATE TABLE " + TABLE_NAME + " (" +
@@ -36,6 +33,7 @@ public class DictionaryOpenHelper extends SQLiteOpenHelper {
 					DEST_USER + " TEXT, " +
 					TARGET_LAT + " REAL, " +
 					TARGET_LNG + " REAL, " +
+					USER_NOTIFIED + " INTEGER, " +
 					DELIVERED + " INTEGER, " +
 					CONTENT + " TEXT);";
 
@@ -68,6 +66,7 @@ public class DictionaryOpenHelper extends SQLiteOpenHelper {
 			values.put(TARGET_LAT, m.getTarget().getLatitude());
 			values.put(TARGET_LNG, m.getTarget().getLongitude());
 			values.put(DELIVERED, 0);
+			values.put(USER_NOTIFIED, 0);
 			if (m.getDest_user() != null){
 				values.put(DEST_USER, m.getDest_user().fetchIfNeeded().getJSONObject("profile").getString("name"));
 			}
@@ -97,15 +96,22 @@ public class DictionaryOpenHelper extends SQLiteOpenHelper {
 
 	public Cursor getUnDeliveredMessages() {
 		SQLiteDatabase db = getReadableDatabase();
-		Cursor cursor = db.query(TABLE_NAME, null , DELIVERED+" = 0", null, null, null, null);
-//		Cursor cursor = db.query(TABLE_NAME, null , null, null, null, null, null);
+		Cursor cursor = db.query(TABLE_NAME, null , DELIVERED+"=0", null, null, null, null);
 		return cursor;
 	}
+	
+	public Cursor getUnNotifiedMessages() {
+		SQLiteDatabase db = getReadableDatabase();
+		Cursor cursor = db.query(TABLE_NAME, null , USER_NOTIFIED+"=0", null, null, null, null);
+		return cursor;
+	}
+	
 	public Cursor getDeliveredMessages() {
 		SQLiteDatabase db = getReadableDatabase();
-		Cursor cursor = db.query(TABLE_NAME, null , DELIVERED+" = 1", null, null, null, null);
+		Cursor cursor = db.query(TABLE_NAME, null , DELIVERED+"=1", null, null, null, null);
 		return cursor;
 	}	
+	
 	public Message getMessage(String mId) {
 		SQLiteDatabase db = getReadableDatabase();
 		Cursor c = db.query(TABLE_NAME, null , OBJECT_ID+"='"+mId+"'", null, null, null, null);
@@ -120,7 +126,8 @@ public class DictionaryOpenHelper extends SQLiteOpenHelper {
 		message.setObjectId(c.getString(c.getColumnIndex(OBJECT_ID)));
 		message.setContent(c.getString(c.getColumnIndex(CONTENT)));
 		message.setTarget(new ParseGeoPoint(c.getDouble(c.getColumnIndex(TARGET_LAT)), c.getDouble(c.getColumnIndex(TARGET_LNG))));
-		message.setDelivered(false);
+		message.setDelivered(c.getInt(c.getColumnIndex(DELIVERED))==1);
+		message.setUser_notified(c.getInt(c.getColumnIndex(USER_NOTIFIED))==1);
 		
 		ParseUser dest = new ParseUser();
 		String dn = c.getString(c.getColumnIndex(DEST_USER));
@@ -145,19 +152,29 @@ public class DictionaryOpenHelper extends SQLiteOpenHelper {
 		SQLiteDatabase db = getWritableDatabase();
 			ContentValues values = new ContentValues();
 			values.put(DELIVERED, "1");
-//			values.put(OBJECT_ID, m.getObjectId());
+			m.setDelivered(true);
 			try {
-//				long res = db.updateWithOnConflict(TABLE_NAME, values, OBJECT_ID+"="+m.getObjectId(), null, 5);
-				long res = db.update(TABLE_NAME, values, OBJECT_ID+"='"+m.getObjectId()+"'", null);
-//				long res = db.update(TABLE_NAME, values, null, null);
-				System.out.println(res);
+				db.update(TABLE_NAME, values, OBJECT_ID+"='"+m.getObjectId()+"'", null);
 			} catch (SQLException e){
 				e.printStackTrace();
-//				System.out.println("Message already there");
 			} finally {
 				db.close();
 			}
 
+	}
+	
+	public void markAsNotified(Message m) {
+		SQLiteDatabase db = getWritableDatabase();
+			ContentValues values = new ContentValues();
+			values.put(USER_NOTIFIED, "1");
+			m.setUser_notified(true);
+			try {
+				db.update(TABLE_NAME, values, OBJECT_ID+"='"+m.getObjectId()+"'", null);
+			} catch (SQLException e){
+				e.printStackTrace();
+			} finally {
+				db.close();
+			}
 	}
 
 }

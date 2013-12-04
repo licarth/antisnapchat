@@ -16,6 +16,8 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <!-- Allows to start services on startup -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Notifications -->
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <uses-sdk
         android:minSdkVersion="10"
@@ -27,10 +29,10 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
-        <service android:name="com.cropop.android.v1.service.CropopService" />
-        <service android:name="com.cropop.android.v1.service.NotificationService" />
+        <service android:name="com.cropop.android.v1.service.MessageSyncService" />
+        <service android:name="com.cropop.android.v1.service.LocationWatchService" />
 
-        <receiver android:name="com.cropop.android.v1.OnBootReceiver" >
+        <receiver android:name="com.cropop.android.v1.receiver.OnBootReceiver" >
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
@@ -110,6 +112,23 @@
             android:name="com.cropop.android.v1.SlashScreen"
             android:label="@string/title_activity_slash_screen" >
         </activity>
+
+        <!-- Parse Push Service -->
+        <service android:name="com.parse.PushService" />
+
+        <receiver android:name="com.cropop.android.v1.receiver.ParsePushNotificationReceiver" >
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.USER_PRESENT" />
+                <action android:name="com.cropop.action.NEW_MESSAGE" />
+            </intent-filter>
+        </receiver>
+        <receiver android:name="com.parse.ParseBroadcastReceiver" >
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.USER_PRESENT" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

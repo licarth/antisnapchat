@@ -5,14 +5,12 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
-import android.location.Criteria;
-import android.location.Location;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -20,22 +18,33 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-import com.cropop.android.v1.R;
 import com.cropop.android.v1.manager.FriendsManager;
 import com.cropop.android.v1.model.Message;
 import com.google.android.gms.internal.p;
 import com.google.android.gms.maps.model.LatLng;
 import com.parse.ParseException;
 import com.parse.ParseGeoPoint;
+import com.parse.ParseInstallation;
 import com.parse.ParseObject;
+import com.parse.ParsePush;
+import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
+import com.parse.SendCallback;
 
 public class FriendsListActivity extends Activity {
 
+	/**
+	 * Internal message object.
+	 */
 	private Message message = new Message();
+	/**
+	 * Parse Message object being sent.
+	 */
+	private ParseObject pMessage = new ParseObject("Message");
 	public ProgressDialog progressDialog;
-	
+
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -67,7 +76,7 @@ public class FriendsListActivity extends Activity {
 				final String item = (String) parent.getItemAtPosition(position);
 				message.setDest_user(friends.get(position));
 				Log.i("Parse", friends.toString());
-//				startSendMessageActivity();
+				//				startSendMessageActivity();
 				startSelectTargetActivity();
 			}
 		});
@@ -107,7 +116,7 @@ public class FriendsListActivity extends Activity {
 	private void startSendMessageActivity() {
 		Intent intent = new Intent(this, SendMessageActivity.class);
 		startActivityForResult(intent, 2);
-		
+
 	}
 
 	protected void onActivityResult (int requestCode, int resultCode, Intent data) {
@@ -125,7 +134,7 @@ public class FriendsListActivity extends Activity {
 				//Text message sent by user
 				String content = data.getStringExtra("content");
 				message.setContent(content);
-				
+
 				sendMessageAsync();
 			} else {
 				//TODO Handle errors...
@@ -140,7 +149,6 @@ public class FriendsListActivity extends Activity {
 	}
 
 	private void sendMessageAsync() {
-		ParseObject pMessage = new ParseObject("Message");
 		pMessage.put("content", message.getContent());
 		pMessage.put("target", message.getTarget());
 		// BEWARE ! Don't give full object to avoid modifying it.
@@ -154,14 +162,41 @@ public class FriendsListActivity extends Activity {
 			e1.printStackTrace();
 		}
 		pMessage.saveInBackground(new SaveCallback() {
-			
+
 			@Override
 			public void done(ParseException e) {
 				Log.i("Parse", "Message Sent :!");
-				progressDialog.dismiss();
-//				ProgressDialog.show(this, "", "Sending message...", true);
+				sendPushNotificationToDest();
 			}
 		});
+	}
+
+	protected void sendPushNotificationToDest() {
+		JSONObject data;
+		try {
+			data = new JSONObject("{"
+					+ "\"action\": \"com.cropop.action.NEW_MESSAGE\","
+					+ "\"messageId\": \""+pMessage.getObjectId()+"\","
+					+ "\"expName\": \""+message.getExp_user().getJSONObject("profile").getString("name")+"\"}");
+			
+			ParseQuery pushQuery = ParseInstallation.getQuery();
+			pushQuery.whereEqualTo("user", ParseUser.getCurrentUser());
+			
+			ParsePush push = new ParsePush();
+			push.setQuery(pushQuery);
+			push.setData(data);
+			push.sendInBackground(new SendCallback() {
+				
+				@Override
+				public void done(ParseException e) {
+					progressDialog.dismiss();
+				}
+			});
+			
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	public Message getMessage() {

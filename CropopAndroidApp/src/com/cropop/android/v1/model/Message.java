@@ -11,6 +11,7 @@ public class Message {
 	private ParseUser dest_user;
 	private ParseGeoPoint target;
 	private boolean delivered = false;
+	private boolean user_notified = false;
 	
 	public String getContent() {
 		return content;
@@ -47,6 +48,12 @@ public class Message {
 	}
 	public void setObjectId(String objectId) {
 		this.objectId = objectId;
+	}
+	public boolean isUser_notified() {
+		return user_notified;
+	}
+	public void setUser_notified(boolean user_notified) {
+		this.user_notified = user_notified;
 	}
 	
 }
