@@ -7,6 +7,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
+import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -25,7 +26,6 @@ import com.cropop.android.v1.R;
 import com.cropop.android.v1.ShowMessageActivity;
 import com.cropop.android.v1.manager.MyLocationManager;
 import com.cropop.android.v1.model.Message;
-import com.google.android.gms.internal.al;
 import com.google.android.gms.maps.model.LatLng;
 
 
@@ -33,7 +33,7 @@ import com.google.android.gms.maps.model.LatLng;
 public class LocationWatchService extends Service {
 
 	double distance;
-	public static int DETECTION_DIST = 100; //En metres
+	public static int DETECTION_DIST = 999999; //En metres
 	public static long DETECTION_PERIOD = TimeUnit.SECONDS.toMillis(60);
 	public BroadcastReceiver forceLocalizeReceiver = new BroadcastReceiver() {
 		
@@ -104,7 +104,7 @@ public class LocationWatchService extends Service {
 					db.markAsNotified(m);
 				}
 				else {
-					//Store for further notification.
+					//Message already stored, ok.
 					messagesCount++;
 					secretMessages++;
 				}
@@ -133,7 +133,8 @@ public class LocationWatchService extends Service {
 		Builder mBuilder = new NotificationCompat.Builder(this)
 		.setContentTitle("Dist: " +((int) (distance * 1000))+" m" +", Exp:"+ ((message.getExp_user() != null) ? message.getExp_user().getUsername() :"Unknown"))
 		.setContentText(message.getContent())
-		.setSmallIcon(R.drawable.nopic);
+		.setSmallIcon(R.drawable.cropop_notification_icon)
+		.setDefaults(Notification.DEFAULT_VIBRATE);
 
 		// Creates an explicit intent for an Activity in your app
 		Intent resultIntent = new Intent(this, ShowMessageActivity.class);

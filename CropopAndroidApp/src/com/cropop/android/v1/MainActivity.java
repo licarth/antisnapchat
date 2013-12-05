@@ -230,7 +230,6 @@ public class MainActivity extends Activity {
 	}
 
 	protected void getFriends() {
-
 		//Call Facebook API to get friends...
 		MainActivity.this.progressDialog = ProgressDialog.show(
 				MainActivity.this, "", "Loading friends...", true);
@@ -282,8 +281,6 @@ public class MainActivity extends Activity {
 					Log.d("score", "Retrieved " + parseFriends.size() + " scores");
 					displayFriends();
 					progressDialog.dismiss();
-
-
 				} else {
 					Log.d("score", "Error: " + e.getMessage());
 				}

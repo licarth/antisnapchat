@@ -58,17 +58,18 @@ public class MessageSyncService extends Service {
 
 			@Override
 			public void run() {
-				downloadNewMessages();
+				downloadNewMessagesFromParse();
 				//Send broadcast to say we need to be localized and compare loc to new message(s) loc(s).
 				Intent intent = new Intent();
 				intent.setAction("com.cropop.action.FORCE_LOCALIZE");
 				sendBroadcast(intent);
+				stopSelf();
 			}
 		});
 		return START_STICKY;
 	}
 
-	protected void downloadNewMessages() {
+	protected void downloadNewMessagesFromParse() {
 		Log.i("MessageSyncService", "Sending messages request...");
 		ParseUser currentUser = ParseUser.getCurrentUser();
 		//Parse Query : get all undelivered messages for me.
