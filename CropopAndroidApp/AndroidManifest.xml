@@ -44,7 +44,7 @@
             android:value="@integer/google_play_services_version" />
 
         <activity
-            android:name="com.cropop.android.v1.MainActivity"
+            android:name="com.cropop.android.v1.LoginActivity"
             android:label="@string/app_name"
             android:launchMode="singleTop" >
             <intent-filter>
@@ -129,6 +129,16 @@
                 <action android:name="android.intent.action.USER_PRESENT" />
             </intent-filter>
         </receiver>
+
+        <activity
+            android:name="com.cropop.android.v1.SplashActivity"
+            android:label="@string/title_activity_splash" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+<!--                 <category android:name="android.intent.category.LAUNCHER" /> -->
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

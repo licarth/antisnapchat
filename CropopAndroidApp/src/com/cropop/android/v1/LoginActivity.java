@@ -19,6 +19,7 @@ import android.widget.Button;
 import com.cropop.android.v1.R;
 import com.cropop.android.v1.manager.FriendsManager;
 import com.cropop.android.v1.model.Message;
+import com.cropop.android.v1.model.ParseGraphUser;
 import com.cropop.android.v1.service.MessageSyncService;
 import com.cropop.android.v1.service.DictionaryOpenHelper;
 import com.cropop.android.v1.service.LocationWatchService;
@@ -27,18 +28,21 @@ import com.facebook.Request;
 import com.facebook.Response;
 import com.facebook.Session;
 import com.facebook.model.GraphUser;
+import com.google.android.gms.internal.fa;
 import com.parse.FindCallback;
 import com.parse.LogInCallback;
 import com.parse.ParseAnalytics;
 import com.parse.ParseException;
 import com.parse.ParseFacebookUtils;
+import com.parse.ParseGeoPoint;
 import com.parse.ParseInstallation;
+import com.parse.ParseObject;
 import com.parse.ParsePush;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.parse.PushService;
 
-public class MainActivity extends Activity {
+public class LoginActivity extends Activity {
 
 	private Button loginButton;
 	private Dialog progressDialog;
@@ -47,7 +51,7 @@ public class MainActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		// TODO Auto-generated method stub
 		super.onCreate(savedInstanceState);
-		setTitle("CropopApplication");
+		setTitle("Cropop");
 		//		Parse App opens statistics
 		ParseAnalytics.trackAppOpened(getIntent());
 
@@ -55,7 +59,7 @@ public class MainActivity extends Activity {
 	}
 
 	private void startApp() {
-		PushService.setDefaultPushCallback(this, MainActivity.class);
+		PushService.setDefaultPushCallback(this, LoginActivity.class);
 		ParseInstallation installation = ParseInstallation.getCurrentInstallation();
 		installation.put("user", ParseUser.getCurrentUser());
 		try {
@@ -137,14 +141,14 @@ public class MainActivity extends Activity {
 	}
 
 	private void onLoginButtonClicked() {
-		MainActivity.this.progressDialog = ProgressDialog.show(
-				MainActivity.this, "", "Logging in...", true);
+		LoginActivity.this.progressDialog = ProgressDialog.show(
+				LoginActivity.this, "", "Logging in...", true);
 		List<String> permissions = Arrays.asList("basic_info", "user_about_me",
 				"user_relationships", "user_birthday", "user_location");
 		ParseFacebookUtils.logIn(permissions, this, new LogInCallback() {
 			@Override
 			public void done(ParseUser user, ParseException err) {
-				MainActivity.this.progressDialog.dismiss();
+				LoginActivity.this.progressDialog.dismiss();
 				if (user == null) {
 					Log.d(CropopApplication.TAG,
 							"Uh oh. The user cancelled the Facebook login.");
@@ -173,6 +177,12 @@ public class MainActivity extends Activity {
 			@Override
 			public void onCompleted(GraphUser user, Response response) {
 				if (user != null) {
+					ParseGraphUser facebookUser = ParseGraphUser.fromFacebookGraphUser(user);
+					facebookUser.saveInBackground();
+					
+					ParseUser.getCurrentUser().put("facebookGraphUser", facebookUser);
+					ParseUser.getCurrentUser().saveInBackground();
+					
 					// Create a JSON object to hold the profile info
 					JSONObject userProfile = new JSONObject();
 					try {
@@ -231,8 +241,8 @@ public class MainActivity extends Activity {
 
 	protected void getFriends() {
 		//Call Facebook API to get friends...
-		MainActivity.this.progressDialog = ProgressDialog.show(
-				MainActivity.this, "", "Loading friends...", true);
+		LoginActivity.this.progressDialog = ProgressDialog.show(
+				LoginActivity.this, "", "Loading friends...", true);
 
 		Request request = Request.newMyFriendsRequest(ParseFacebookUtils.getSession(),
 				new Request.GraphUserListCallback() {
